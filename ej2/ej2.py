@@ -46,8 +46,10 @@ def verilog_data_dump (input_file_path, output_file_path):
         print ('Directorio de salida invalido')
         print (f'--{output_file_path}')
         return 'Directorio de salida invalido'            
-    if not output_file_path[-1]=='/': #Si el path no tiene '/' al final se la agrego
-        output_file_path += '/'
+    
+    if len(output_file_path)>0:     
+        if not output_file_path[-1]=='/': #Si el path no tiene '/' al final se la agrego
+            output_file_path += '/'
 
     #Leo el archivo verilog
     with open(input_file_path,'r') as f:
