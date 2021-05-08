@@ -16,6 +16,10 @@ def save_mem_data(data, reverse, file_name):
     
     data_pattern = r'    \S*\[(\S*)\] = 8\'\S(\S*);\n*'
     matches = re.findall(data_pattern,data) #Obtengo una matriz de datos
+
+    if len(matches)==0:
+        return False #Si no encontro datos no creo el archivo
+
     matches.sort(key=first_element,reverse=reverse) #Ordenamiento
     
     #Escritura de archivo
@@ -23,7 +27,7 @@ def save_mem_data(data, reverse, file_name):
         for value in matches:
             f.write(value[1]+'\n')
 
-    #return matches
+    return True
 
 def verilog_data_dump (input_file_path, output_file_path):
     created_files=[]
@@ -55,15 +59,16 @@ def verilog_data_dump (input_file_path, output_file_path):
     matches_count=0 #Numero de bloqued de memoria capturados
     
     for match in matches: 
-        #Guardo los datos de cada coincidencia en un archivo memdumpX
-        mem_file_name = f'{output_file_path}memdump{matches_count}.mem'
-        save_mem_data(match[4], False, mem_file_name)   
-        created_files.append(mem_file_name)
-        #Reemplazo el bloque de datos por la linea readmemh
-        # en el string del archivo verilog de salida.
         readmem_string=f'  $readmemh("memdump{matches_count}.mem", {match[1]});\n'
-        verilog_str = verilog_str.replace(match[3],readmem_string, 1)
-        matches_count+=1
+        mem_file_name = f'{output_file_path}memdump{matches_count}.mem'
+        #En cada coincidencia si hay datos los guardo en un archivo memdumpX
+        if save_mem_data(match[4], False, mem_file_name) == True:
+            matches_count+=1
+            created_files.append(mem_file_name)
+            #Reemplazo el bloque de datos por la linea readmemh
+            # en el string del archivo verilog de salida.
+            verilog_str = verilog_str.replace(match[3],readmem_string, 1)
+        
     #Creo el archivo verilog de salida solo si hubieron coincidencia
     #Se le agrega el prefijo mod_ al nombre original
     if (matches_count>0):
@@ -75,7 +80,7 @@ def verilog_data_dump (input_file_path, output_file_path):
         for created_file in created_files:
             print (f'--{created_file}')
     else:
-        print('No se encontraron datos para guradar')
+        print('No se encontraron datos para guardar')
 
     return f'Nº de archivos creados: {len(created_files)}'
 
