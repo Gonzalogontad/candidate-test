@@ -85,8 +85,8 @@ class Adder(Elaboratable):
         
         #Puedo leer un dato nuevo (pasar a ready) solo si no hay dato de salida valido o 
         #o si el dato de salida anterior ya fue leido.
-        comb += self.a.ready.eq((~self.r.valid) | (self.r.accepted()))
-        comb += self.b.ready.eq((~self.r.valid) | (self.r.accepted()))
+        comb += self.a.ready.eq(self.b.valid & ( (~self.r.valid) | (self.r.accepted()) ))
+        comb += self.b.ready.eq(self.a.valid & ( (~self.r.valid) | (self.r.accepted()) ))
 
         return m
 
@@ -153,17 +153,17 @@ async def test_control_signals(dut):
     out = (getSignedNumber(data_a,width) + getSignedNumber(data_b,width))
     
     #Entradas
-    valid_a =[   1    ,    1     ,    0     ,     1    ]
-    valid_b =[   1    ,    1     ,    0     ,     1    ]
-    ready_r =[   1    ,    0     ,    1     ,     0    ]
-    data_a  =[ data_a , data_a+1 , data_a+2 , data_a+3 ]
-    data_b  =[ data_b , data_b+1 , data_b+2 , data_b+3 ]
+    valid_a =[   1    ,    1     ,    0     ,     1    ,     0    ,     1    ]
+    valid_b =[   1    ,    1     ,    0     ,     1    ,     1    ,     0    ]
+    ready_r =[   1    ,    0     ,    1     ,     0    ,     1    ,     1    ]
+    data_a  =[ data_a , -data_a  , -data_a  , -data_a  ,  data_a  ,  data_a  ]
+    data_b  =[ data_b , -data_b  , -data_b  , -data_b  ,  data_b  ,  data_b  ]
     
     #Resultados esperados
-    exp_ready_a = [ 0 , 1 , 1 ,  0  ]
-    exp_ready_b = [ 0 , 1 , 1 ,  0  ]
-    exp_valid_r = [ 1 , 1 , 0 ,  1  ]
-    exp_data_r  = [out,out,out,out+6]
+    exp_ready_a = [ 0 , 0 , 1 ,  1  ,  0  ,  0  ]
+    exp_ready_b = [ 0 , 0 , 1 ,  0  ,  1  ,  1  ]
+    exp_valid_r = [ 1 , 1 , 0 ,  1  ,  0  ,  0  ]
+    exp_data_r  = [out,out,out, -out, -out, -out]
     
     #Resultados
     rec_ready_a = [None]*len(data_a)
@@ -182,7 +182,7 @@ async def test_control_signals(dut):
         cocotb.fork(stream_input_a.control_send(valid_a[j],data_a[j]))    
         cocotb.fork(stream_input_b.control_send(valid_b[j],data_b[j]))
         await stream_output.control_recv(ready_r[j])
-        
+        #cocotb.fork(stream_output.control_recv(ready_r[j]))
         #Leo los resultados (caso 0 los descarto porque es resultado del ciclo anterior)
         if i>0:
             (rec_ready_a[i-1],_,_)= await stream_input_a.read_all()
