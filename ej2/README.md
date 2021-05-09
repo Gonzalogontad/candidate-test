@@ -7,11 +7,11 @@ de salida (OUT_DIR).
 
 Por ejemplo:
 
-  `python3 ej2.py input/testcase1.v -out_dir output/`
+  `python3 ej2.py input/testcase.v -out_dir output/`
 
 Si, no se utiliza el parametro OUT_DIR, el script guarda los archivos de salida en el directorio local del script.
 
-  `python3 ej2.py input/testcase1.v`
+  `python3 ej2.py input/testcase.v`
 
 
 Para ejecutar el test de este ejercicio usar el siguiente comando:
